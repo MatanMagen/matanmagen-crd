@@ -1,0 +1,12 @@
+apiVersion: api.core.matanmagen.io/v1alpha1
+kind: MatanApp
+metadata:
+  name: matanapp-sample
+spec:
+  secret:
+    type: Opaque
+    data:
+      my-key: bXktZGF0YQ==  # base64-encoded "my-data"
+  configMap:
+    data:
+      my-key: my-data
