@@ -20,7 +20,9 @@ import (
 	"context"
 
 	api "github.com/MatanMagen/matanmagen-crd.git/api/v1alpha1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -57,6 +59,20 @@ func (r *MatanAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		// Handle error
 	}
 
+	imageName := matanApp.Spec.ImageName
+	// Define a new Job object
+	job := newJobForCR(matanApp, imageName)
+	// Check if this Job already exists
+	foundJob := &batchv1.Job{}
+	err = r.Get(context.TODO(), types.NamespacedName{Name: job.Name, Namespace: job.Namespace}, foundJob)
+	if err != nil {
+		// If Job doesn't exist, create it
+		err = r.Create(context.TODO(), job)
+		if err != nil {
+			// Handle error
+		}
+	}
+
 	// Define a new Secret object
 	secret := newSecretForCR(matanApp)
 	// Check if this Secret already exists
@@ -84,6 +100,53 @@ func (r *MatanAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func newJobForCR(cr *apiv1alpha1.MatanApp, imageName string) *batchv1.Job {
+	labels := map[string]string{
+		"app": cr.Name,
+	}
+	return &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cr.Name + "-job",
+			Namespace: cr.Namespace,
+			Labels:    labels,
+		},
+		Spec: batchv1.JobSpec{
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: corev1.PodSpec{
+					RestartPolicy: corev1.RestartPolicyNever,
+					Containers: []corev1.Container{
+						{
+							Name:            cr.Name + "-container",
+							Image:           imageName,
+							Command:         []string{"echo", "Hello, World!"},
+							ImagePullPolicy: corev1.PullIfNotPresent,
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("100m"),
+									corev1.ResourceMemory: resource.MustParse("100Mi"),
+								},
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    resource.MustParse("200m"),
+									corev1.ResourceMemory: resource.MustParse("200Mi"),
+								},
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name:  "MY_ENV_VAR",
+									Value: "my-value",
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 func newSecretForCR(cr *apiv1alpha1.MatanApp) *corev1.Secret {

@@ -10,3 +10,4 @@ spec:
   configMap:
     data:
       my-key: my-data
+  imageName: nginx:latest  

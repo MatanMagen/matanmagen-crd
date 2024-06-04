@@ -93,6 +93,9 @@ spec:
                       More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
                     type: object
                 type: object
+              imageName:
+                description: Job defines the job spec
+                type: string
               secret:
                 description: Secret defines the secret spec
                 properties:
@@ -150,6 +153,7 @@ spec:
                 type: object
             required:
             - configMap
+            - imageName
             - secret
             type: object
           status:

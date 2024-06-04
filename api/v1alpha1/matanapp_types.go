@@ -21,16 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // MatanAppSpec defines the desired state of MatanApp
 type MatanAppSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Secret defines the secret spec
 	Secret corev1.Secret `json:"secret"`
+
+	// Job defines the job spec
+	ImageName string `json:"imageName"`
 
 	// ConfigMap defines the configmap spec
 	ConfigMap corev1.ConfigMap `json:"configMap"`
